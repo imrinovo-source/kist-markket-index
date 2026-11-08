@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>רשימת קניות</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--tx:#1f2328;--mut:#6b7280;--ac:#2f7d4f;--acbg:#e3f3ea;--bd:#e5e3dc;--btn:#efede6;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181a;--card:#222428;--tx:#ececec;--mut:#9aa0a6;--ac:#5cc48a;--acbg:#1f3a2c;--bd:#33363b;--btn:#2d3035;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181a;--card:#222428;--tx:#ececec;--mut:#9aa0a6;--ac:#5cc48a;--acbg:#1f3a2c;--bd:#33363b;--btn:#2d3035;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+main{max-width:560px;margin:0 auto;padding:16px 14px 48px}
+h1{font-size:24px;margin:8px 0 2px}
+.sub{color:var(--mut);font-size:14px;margin-bottom:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px}
+.chip.on{background:var(--acbg);border-color:var(--ac);color:var(--ac)}
+.add{display:flex;gap:8px;margin-bottom:18px}
+.add input,.add select{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:12px;padding:11px;font:inherit;min-width:0}
+.add input{flex:1}
+.add button{border:0;background:var(--ac);color:#fff;border-radius:12px;padding:0 16px;font:inherit;font-weight:600}
+.cat{background:var(--card);border:1px solid var(--bd);border-radius:16px;margin-bottom:14px;overflow:hidden}
+.cat h2{font-size:16px;margin:0;padding:12px 14px;border-bottom:1px solid var(--bd)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;border-bottom:1px solid var(--bd)}
+.row:last-child{border-bottom:0}
+.row.on{background:var(--acbg)}
+.nm{flex:1;min-width:0}
+.ck{flex:none;width:30px;height:30px;border:2px solid var(--mut);border-radius:8px;background:var(--card);color:#fff;font-size:18px;line-height:1;padding:0}
+.ck.on{background:var(--ac);border-color:var(--ac)}
+.row.on .nm{font-weight:600}
+.ctl{display:flex;align-items:center;gap:6px;direction:ltr}
+.ctl button{width:38px;height:38px;border:0;border-radius:50%;background:var(--btn);color:var(--tx);font-size:22px;line-height:1}
+.ctl button.p{background:var(--ac);color:#fff}
+.ctl button:disabled{opacity:.3}
+.q{min-width:26px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.x{border:0;background:none;color:var(--mut);font-size:18px;padding:4px 8px}
+.addrow{display:flex;gap:8px;padding:8px 14px}
+.addbtn{flex:1;border:1px dashed var(--ac);background:none;color:var(--ac);border-radius:10px;padding:9px 12px;font:inherit;font-weight:600}
+.ai{flex:1;min-width:0;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:10px;padding:9px 11px;font:inherit}
+.aok{border:0;background:var(--ac);color:#fff;border-radius:10px;padding:0 16px;font:inherit;font-weight:600}
+.empty{text-align:center;color:var(--mut);padding:30px 0}
+.st{color:var(--mut);font-size:12px;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<main>
+<h1>🛒 רשימת קניות</h1>
+<div class="sub" id="sub"></div>
+<div class="bar">
+<button class="chip" id="flt">רק מה שחסר</button>
+<button class="chip" id="clr">נקה הכל</button>
+<button class="chip on" id="wa">שלח בוואטסאפ 💬</button>
+</div>
+<div id="sh"></div>
+<div id="list"></div>
+<div class="st" id="st"></div>
+</main>
+<script>
+const CATS=[
+["ירקות ופירות","🥬","עגבניות|מלפפונים|חסה|גזר|בצל|שום|תפוחי אדמה|בטטה|פלפלים|לימון|כוסברה|פטרוזיליה|בננות|תפוחים|תפוזים / קלמנטינות|ענבים|מלון|אבטיח"],
+["לחם ומאפים","🍞","לחם|פיתות|לחמניות"],
+["חלב וביצים","🥛","חלב|ביצים|גבינה לבנה / קוטג׳|גבינה צהובה|יוגורט יווני|שמנת|חמאה לאפייה|חמאה למריחה|לבנה / גבינת שמנת"],
+["בשר, עוף ודגים","🍗","חזה עוף|שוקיים / כרעיים|בשר טחון|עוף טחון|נקניקיות / שניצלים|דג (סלמון / אמנון)|טונה"],
+["מזווה ויבשים","🍝","אורז|פסטה|קוסקוס|קמח|סוכר|עדשים / חומוס יבש|קורנפלקס / דגנים|שיבולת שועל|ממרח (שוקולד / טחינה)|דבש / ריבה"],
+["שימורים, רטבים ותבלינים","🥫","רסק עגבניות|עגבניות מרוסקות|תירס|חומוס / טחינה גולמית|זיתים|מלפפונים חמוצים|קטשופ / מיונז / חרדל|שמן זית|שמן קנולה / חמניות|מלח|פלפל שחור|פפריקה / כמון / כורכום|אבקת אפייה / סודה לשתייה|חומץ"],
+["קפואים","🧊","ירקות קפואים|צ׳יפס|בצק עלים|גלידה"],
+["חטיפים ומשקאות","🍫","חטיפים מלוחים|עוגיות / ביסקוויטים|שוקולד|אגוזים / פיצוחים|פירות יבשים|מים / סודה|קפה|תה|מיצים|משקאות קלים"],
+["ניקיון ונייר","🧽","נוזל כלים|מרכך כביסה|חומר לרצפה|מנקה כללי / אקונומיקה|טבליות למדיח|ספוגים|שקיות אשפה|נייר טואלט|מגבות נייר|נייר אפייה / נייר כסף / שקיות"],
+["טואלטיקה ובית מרקחת","🧴","שמפו ומרכך|סבון רחצה / סבון ידיים|משחת שיניים ומברשות|דאודורנט|סכיני גילוח|מגבונים|מוצרי היגיינה אישית|משככי כאבים|פלסטרים|סוללות|נורות"],
+["דברים נוספים","➕",""]
+].map(c=>[c[0],c[1],c[2]?c[2].split("|"):[]]);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+let S={q:{},extra:[]},only=false,db=null,ref=null,timer=null;
+try{const l=JSON.parse(localStorage.getItem("grocery")||"null");if(l&&l.q)S=l}catch(e){}
+function items(ci){return CATS[ci][2].map((n,i)=>({id:ci+"-"+i,n})).concat(S.extra.filter(e=>e.c===ci).map(e=>({id:e.id,n:e.n,x:1})))}
+function render(){
+  let cnt=0,h="";
+  CATS.forEach((c,ci)=>{
+    const rows=items(ci).filter(it=>!only||(S.q[it.id]||0)>0);
+    if(!rows.length&&only)return;
+    h+=`<section class="cat"><h2>${c[1]} ${esc(c[0])}</h2>`+rows.map(it=>{
+      const q=S.q[it.id]||0;
+      return `<div class="row ${q?"on":""}"><button class="ck ${q?"on":""}" data-a="t" data-id="${it.id}" aria-label="צריך">${q?"✓":""}</button><span class="nm">${esc(it.n)}</span><div class="ctl">${it.x&&!q?`<button class="x" data-a="d" data-id="${it.id}" aria-label="מחק">✕</button>`:""}<button data-a="m" data-id="${it.id}" ${q?"":"disabled"} aria-label="פחות">−</button><span class="q">${q}</span><button class="p" data-a="p" data-id="${it.id}" aria-label="יותר">+</button></div></div>`;
+    }).join("")+(only?"":`<div class="addrow"><button class="addbtn" data-a="a" data-c="${ci}">+ הוסף פריט</button></div>`)+`</section>`;
+  });
+  Object.values(S.q).forEach(v=>{if(v>0)cnt++});
+  $("list").innerHTML=h||`<div class="empty">אין כרגע פריטים ברשימה 🎉</div>`;
+  $("sub").textContent=cnt?`${cnt} פריטים ברשימה`:"לוחצים + ליד מה שחסר";
+  $("flt").classList.toggle("on",only);
+}
+function save(){
+  try{localStorage.setItem("grocery",JSON.stringify(S))}catch(e){}
+  if(!ref)return;
+  clearTimeout(timer);
+  timer=setTimeout(flush,500);
+}
+let busy=false,first=true;
+function flush(){
+  timer=null;
+  if(!ref)return;
+  if(busy){timer=setTimeout(flush,400);return}
+  busy=true;
+  const snap=JSON.stringify(S);
+  ref.set(JSON.parse(snap)).then(()=>{busy=false;$("st").textContent="מסונכרן ✓";if(JSON.stringify(S)!==snap)flush()}).catch(e=>{busy=false;$("st").textContent="לא נשמר בשרת ("+((e&&(e.code||e.message))||"שגיאה")+") – הרשימה עובדת אצלך במכשיר";timer=setTimeout(flush,8000)});
+}
+function change(f){try{f();S.t=Date.now();render();save()}catch(e){$("st").textContent="שגיאה: "+e.message}}
+$("list").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const id=b.dataset.id,a=b.dataset.a;
+  if(a==="a"){const w=b.parentNode;w.innerHTML='<input class="ai" placeholder="שם הפריט…" data-c="'+b.dataset.c+'"><button class="aok" data-a="ok" data-c="'+b.dataset.c+'">הוסף</button>';w.querySelector("input").focus();return}
+  if(a==="ok"){addTo(+b.dataset.c,b.parentNode.querySelector("input").value);return}
+  change(()=>{
+    if(a==="p")S.q[id]=(S.q[id]||0)+1;
+    else if(a==="m"){S.q[id]=Math.max(0,(S.q[id]||0)-1);if(!S.q[id])delete S.q[id]}
+    else if(a==="t"){if(S.q[id])delete S.q[id];else S.q[id]=1}
+    else if(a==="d")S.extra=S.extra.filter(x=>x.id!==id);
+  });
+});
+$("flt").onclick=()=>{only=!only;render()};
+$("wa").onclick=async()=>{
+  let t="🛒 רשימת קניות\n",n=0;
+  CATS.forEach((c,ci)=>{
+    const rows=items(ci).filter(it=>(S.q[it.id]||0)>0);
+    if(!rows.length)return;
+    t+="\n"+c[1]+" "+c[0]+"\n"+rows.map(it=>"• "+it.n+(S.q[it.id]>1?" ×"+S.q[it.id]:"")).join("\n")+"\n";
+    n+=rows.length;
+  });
+  if(!n){$("st").textContent="אין פריטים מסומנים לשליחה";return}
+  const u="https://wa.me/?text="+encodeURIComponent(t);
+  try{if(navigator.share){await navigator.share({text:t});return}}catch(e){if(e&&e.name==="AbortError")return}
+  let w=null;try{w=window.open(u,"_blank")}catch(e){}
+  if(!w)showShare(t,u);
+};
+function showShare(t,u){
+  const h=$("sh");
+  h.innerHTML='<div class="cat" style="padding:12px"><textarea id="sht" readonly rows="8" style="width:100%;border:1px solid var(--bd);background:var(--bg);color:var(--tx);border-radius:10px;padding:10px;font:inherit"></textarea><div class="addrow" style="padding:8px 0 0"><button class="aok" id="shc" style="padding:10px 16px">העתק</button><a class="aok" href="'+u+'" target="_blank" rel="noopener" style="padding:10px 16px;text-decoration:none;text-align:center">פתח בוואטסאפ</a><button class="chip" id="shx">סגור</button></div></div>';
+  $("sht").value=t;
+  $("shc").onclick=async()=>{try{await navigator.clipboard.writeText(t)}catch(e){$("sht").select();try{document.execCommand("copy")}catch(_){}}$("st").textContent="הועתק – אפשר להדביק בוואטסאפ"};
+  $("shx").onclick=()=>{h.innerHTML=""};
+}
+let ct=null;
+$("clr").onclick=()=>{
+  if(!ct){$("clr").textContent="בטוחים? לחצו שוב";ct=setTimeout(()=>{ct=null;$("clr").textContent="נקה הכל"},3000);return}
+  clearTimeout(ct);ct=null;$("clr").textContent="נקה הכל";change(()=>{S.q={}});
+};
+function addTo(c,n){n=n.trim();if(!n)return;const id="x"+Date.now();change(()=>{S.extra.push({id,n,c});S.q[id]=1})}
+$("list").addEventListener("keydown",e=>{const t=e.target;if(t.classList&&t.classList.contains("ai")){if(e.key==="Enter")addTo(+t.dataset.c,t.value);else if(e.key==="Escape")render()}});
+render();
+(async()=>{
+  try{
+    if(!window.claude||!claude.use)return;
+    db=await claude.use("db");if(!db)return;
+    ref=db.doc("lists/main");
+    ref.onSnapshot(s=>{
+      const d=s.exists?s.data():null,rt=(d&&d.t)||0;
+      if(d&&d.q&&rt>(S.t||0)){S={q:d.q||{},extra:d.extra||[],t:rt};try{localStorage.setItem("grocery",JSON.stringify(S))}catch(e){}render()}
+      if(first){first=false;if((S.t||0)>rt)save()}
+      if(!$("st").textContent)$("st").textContent="משותף ומסונכרן ✓";
+    },()=>{$("st").textContent="עובד מקומית בלבד"});
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
